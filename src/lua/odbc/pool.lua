@@ -141,7 +141,12 @@ local function reconnect_thread_proc(pipe, wait_on, put_to, ...)
     if cnn then
       cnn:disconnect()
       local hcnn = cnn:handle()
-      local ok, err = cnn:connect(...)
+      local ok, err 
+      if type(...) == 'table' then
+        ok, err = cnn:driverconnect(...)
+      else
+        ok, err = cnn:connect(...)
+      end
       if ok then 
         zpool.put(put_to, hcnn)
       else

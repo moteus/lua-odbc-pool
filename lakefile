@@ -34,6 +34,7 @@ function run(file, cwd)
 end
 
 target('test', install, function()
+  run(J(TESTDIR, 'test_pool.lua'))
 end)
 
 default('build')

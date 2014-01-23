@@ -30,7 +30,8 @@ install:
   - sudo luarocks make rockspecs/odbc-pool-scm-0.rockspec
 
 script:
-  - lua$LUA_SFX -lodbc.pool -v
+  - cd test
+  - lua$LUA_SFX test_pool.lua
 
 notifications:
   email:
