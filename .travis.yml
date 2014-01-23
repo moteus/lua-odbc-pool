@@ -5,6 +5,7 @@ env:
     - PLATFORM=linux
     - LUAROCKS_VER=2.1.0
     - LUAODBC_TEST_DBMS=MySQL
+    - ZMQ_VER=zeromq4
   matrix:
     - LUA=lua5.1 LUA_SFX=
     - LUA=lua5.2 LUA_SFX=
@@ -16,6 +17,7 @@ branches:
 
 before_install:
   - bash .travis/setup_lua.sh
+  - bash .travis/setup_zmq.sh
   - mysql --version
   - sudo apt-get install libmyodbc libsqliteodbc unixodbc unixodbc-dev
 
