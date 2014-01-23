@@ -1,0 +1,36 @@
+language: erlang
+
+env:
+  global:
+    - PLATFORM=linux
+    - LUAROCKS_VER=2.1.0
+    - LUAODBC_TEST_DBMS=MySQL
+  matrix:
+    - LUA=lua5.1 LUA_SFX=
+    - LUA=lua5.2 LUA_SFX=
+    - LUA=luajit LUA_SFX=jit
+
+branches:
+  only:
+    - master
+
+before_install:
+  - bash .travis/setup_lua.sh
+  - mysql --version
+  - sudo apt-get install libmyodbc libsqliteodbc unixodbc unixodbc-dev
+
+install:
+  - sudo luarocks install https://raw2.github.com/moteus/lzmq/master/rockspecs/lzmq-scm-0.rockspec
+  - sudo luarocks install https://raw2.github.com/moteus/lua-odbc/master/rockspec/odbc-scm-0.rockspec
+  - sudo luarocks install https://raw2.github.com/moteus/lzmq-pool/master/rockspecs/lzmq-pool-scm-0.rockspec
+  - sudo luarocks install https://raw2.github.com/moteus/lua-llthreads2/master/rockspecs/lua-llthreads2-0.1.0-1.rockspec
+  - sudo luarocks install https://raw2.github.com/moteus/lunit/moteus-skip/rockspecs/lunitx-scm.mot.skip-0.rockspec
+  - sudo luarocks make rockspecs/odbc-pool-scm-0.rockspec
+
+script:
+  - lua$LUA_SFX -lodbc.pool -v
+
+notifications:
+  email:
+    on_success: change
+    on_failure: always
