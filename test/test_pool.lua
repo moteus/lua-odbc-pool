@@ -40,7 +40,15 @@ assert(2 == cli:reconnect_queue_id())
 
 local HANDLE = connections[1]:handle()
 
-cli:acquire(function(cnn)
+local a,b,c = cli:acquire(1000, function(cnn)
+  return true, 1, nil, 3
+end)
+
+assert(a == 1)
+assert(b == nil)
+assert(c == 3)
+
+cli:acquire(1000, function(cnn)
   -- disconnect but do not notify about that queue
   assert(HANDLE == cnn:handle())
   assert(cnn:connected())
@@ -48,7 +56,7 @@ cli:acquire(function(cnn)
   cnn:disconnect()
 end)
 
-cli:acquire(function(cnn)
+cli:acquire(1000, function(cnn)
   -- queue does not reconnect connection
   -- tell queue that we need reconnect connection
   assert(HANDLE == cnn:handle())
@@ -56,7 +64,7 @@ cli:acquire(function(cnn)
   return false
 end)
 
-cli:acquire(function(cnn)
+cli:acquire(1000, function(cnn)
   -- test that connection was reconnected
   assert(HANDLE == cnn:handle())
   assert(cnn:connected())

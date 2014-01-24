@@ -118,10 +118,23 @@ local function reconnect_thread_proc(pipe, wait_on, put_to, ...)
 
   wait_on, put_to = wait_on - 1, put_to - 1
 
+  local logger_ctor -- = [[return print]]
+
+  local function load_logger()
+    if logger_ctor then
+      local l = assert((loadstring or load)(logger_ctor))
+      return assert(l())
+    end
+    return function() end
+  end
+
+  local log = load_logger()
+
   local timeout, cnn = 5000, nil
 
   local function interrupted()
     local msg, err = pipe:recvx(zmq.DONTWAIT)
+    log("I: thread recv: " .. (msg or tostring(err)))
     if msg and msg == 'FINISH' then return true end
     if (not err) or (err:mnemo() ~= 'EAGAIN') then return true end
   end
@@ -131,6 +144,7 @@ local function reconnect_thread_proc(pipe, wait_on, put_to, ...)
       local h = zpool.get_timeout(wait_on, timeout)
       if h ~= 'timeout' then
         assert(type(h) == 'userdata')
+        log("I: thread select new connection: " .. tostring(h))
         if cnn then cnn:reset_handle(h) else cnn = odbc.init_connection(h) end
         return cnn
       end
@@ -150,11 +164,13 @@ local function reconnect_thread_proc(pipe, wait_on, put_to, ...)
         ok, err = cnn:connect(...)
       end
       if ok then 
+        log("I: connection " .. tostring(cnn:handle()) .. " pass")
         zpool.put(put_to, hcnn)
       else
+        log("I: connection " .. tostring(cnn:handle()) .. " fail: " .. tostring(err))
         zpool.put(wait_on, hcnn)
         if interrupted() then break end
-        ztimer.sleep(5000)
+        ztimer.sleep(timeout)
       end
     end
   end
@@ -172,6 +188,8 @@ function reconnect_thread:new(cli, ...)
     ctx:destroy()
     assert(thread, pipe)
   end
+
+  pipe:set_sndtimeo(1000)
 
   local o = setmetatable({
     _private = {
