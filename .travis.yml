@@ -25,8 +25,8 @@ install:
   - sudo luarocks install https://raw2.github.com/moteus/lzmq/master/rockspecs/lzmq-scm-0.rockspec
   - sudo luarocks install https://raw2.github.com/moteus/lua-odbc/master/rockspec/odbc-scm-0.rockspec
   - sudo luarocks install https://raw2.github.com/moteus/lzmq-pool/master/rockspecs/lzmq-pool-scm-0.rockspec
-  # - sudo luarocks install https://raw2.github.com/moteus/lua-llthreads2/master/rockspecs/lua-llthreads2-0.1.0-1.rockspec
-  - sudo luarocks install https://raw2.github.com/Neopallium/lua-llthreads/master/rockspecs/lua-llthreads-scm-0.rockspec
+  - sudo luarocks install https://raw2.github.com/moteus/lua-llthreads2/master/rockspecs/lua-llthreads2-0.1.0-1.rockspec
+  # - sudo luarocks install https://raw2.github.com/Neopallium/lua-llthreads/master/rockspecs/lua-llthreads-scm-0.rockspec
   - sudo luarocks make rockspecs/odbc-pool-scm-0.rockspec
 
 script:
