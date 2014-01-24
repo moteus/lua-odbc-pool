@@ -193,7 +193,8 @@ function reconnect_thread:stop()
   self._private = nil
   _private.pipe:send("FINISH")
   _private.ctx:destroy(5000)
-  return _private.thread:join()
+  pcall(_private.thread.join, _private.thread)
+  return true
 end
 
 end
