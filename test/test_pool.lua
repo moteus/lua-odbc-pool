@@ -34,6 +34,10 @@ end
 
 local cli = odbcpool.client(1, 2)
 
+assert(1 == cli:work_queue_id())
+
+assert(2 == cli:reconnect_queue_id())
+
 local HANDLE = connections[1]:handle()
 
 cli:acquire(function(cnn)

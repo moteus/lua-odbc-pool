@@ -27,11 +27,11 @@ function client:new(work_id, reconnect_id)
 end
 
 function client:work_queue_id()
-  return self._private.work_id
+  return self._private.work_id + 1
 end
 
 function client:reconnect_queue_id()
-  return self._private.reconnect_id
+  return self._private.reconnect_id + 1
 end
 
 function client:reconnect(cnn)
@@ -115,6 +115,8 @@ local function reconnect_thread_proc(pipe, wait_on, put_to, ...)
   local zmq    = require "lzmq"
   local ztimer = require "lzmq.timer"
   local zpool  = require "lzmq.pool.core"
+
+  wait_on, put_to = wait_on - 1, put_to - 1
 
   local timeout, cnn = 5000, nil
 
