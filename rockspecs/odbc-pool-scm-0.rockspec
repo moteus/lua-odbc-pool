@@ -24,6 +24,8 @@ build = {
   copy_directories = {},
 
   modules = {
-    [ "odbc.pool" ] = "src/lua/odbc/pool.lua",
+    [ "odbc.pool"      ] = "src/lua/odbc/pool.lua",
+    [ "odbc.impl.pool" ] = "src/lua/odbc/impl/pool.lua",
+    [ "odbc.dba.pool"  ] = "src/lua/odbc/dba/pool.lua",
   }
 }
