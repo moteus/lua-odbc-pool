@@ -1,5 +1,5 @@
 local odbc     = require "odbc"
-local odbcpool = require "odbc.pool"
+local odbcpool = require "odbc.dba.pool"
 require "lzmq.pool".init(2)
 
 local IS_WINDOWS = (require"package".config:sub(1,1) == '\\')

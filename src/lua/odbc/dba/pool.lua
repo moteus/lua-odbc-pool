@@ -1,2 +1,2 @@
-local odbc = require "odbc"
+local odbc = require "odbc.dba"
 return require "odbc.impl.pool"(odbc)
