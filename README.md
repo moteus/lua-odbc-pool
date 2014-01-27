@@ -8,7 +8,7 @@ ODBC connections pool
 This library allows use same ODBC connections from different threads/states.
 Also this library supports asyncronus reconnection to database in separate thread.
 This library based on [lzmq-pool](https://github.com/moteus/lzmq-pool), [lua-llthreads2](https://github.com/moteus/lua-llthreads2) and [lua-odbc](https://github.com/moteus/lua-odbc) libraryes.
-Note. This library does may does not work with original `lua-llthreads` library.
+Note. This library may does not work with original `lua-llthreads` library.
 
 
 ##Usage
