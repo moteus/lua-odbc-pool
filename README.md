@@ -18,7 +18,7 @@ Note. This library may does not work with original `lua-llthreads` library.
 -- Client thread
 --
 
-local odbcpool = require "odbc.pool"
+local odbcpool = require "odbc.dba.pool"
 
 -- Client use 2 lzmq.pool slots. One for ready queue
 -- and one to reconnection queue. You can get this 
@@ -71,7 +71,7 @@ end
 -- Here we wait until end of application. 
 -- We just need keep alive `rthread`, `env` and `connections` variables
 
--- Suppose we runs this code in coroutine then we can just yield
+-- Suppose we run this code in coroutine then we can just yield
 -- and main thread resume us when application should be closed
 
 coroutine.yield()
