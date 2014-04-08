@@ -1,25 +1,31 @@
 return function(odbc)
 local string   = require "string"
 local zmq      = require "lzmq"
-local zpool    = require "lzmq.pool.core"
+local luq      = require "luq"
 local zthreads = require "lzmq.threads"
+
+local LUQ_QUEUE_PREFIX = "odbc/pool/"
 
 -------------------------------------------------------------------------------
 -- Client side
 local client = {} do 
 client.__index = client
 
-function client:new(work_id, reconnect_id)
-  assert(type(work_id) == 'number')
-  assert(type(reconnect_id) == 'number')
-  assert(work_id > 0)
-  assert(reconnect_id > 0)
-  assert(work_id ~= reconnect_id)
+function client:new(id)
+  assert(id)
+
+  local work_id      = LUQ_QUEUE_PREFIX .. id
+  local reconnect_id = "{RECONNECT}" .. work_id
+
+  work_q      = luq.queue(work_id)
+  reconnect_q = luq.queue(reconnect_id)
 
   local o = setmetatable({
     _private = {
-      work_id      = work_id - 1;
-      reconnect_id = reconnect_id - 1;
+      work_id      = work_id;
+      reconnect_id = reconnect_id;
+      work_q       = work_q;
+      reconnect_q  = reconnect_q;
     }
   }, self)
 
@@ -27,31 +33,31 @@ function client:new(work_id, reconnect_id)
 end
 
 function client:work_queue_id()
-  return self._private.work_id + 1
+  return self._private.work_id
 end
 
 function client:reconnect_queue_id()
-  return self._private.reconnect_id + 1
+  return self._private.reconnect_id
 end
 
 function client:reconnect(cnn)
   cnn:disconnect()
-  zpool.put(self._private.reconnect_id, (cnn:handle()))
+  self._private.reconnect_q:put((cnn:handle()))
 end
 
 function client:put(cnn)
   local h = cnn:handle()
   cnn:reset_handle(h) -- to close all statements
-  zpool.put(self._private.work_id, h)
+  self._private.work_q:put(h)
 end
 
 function client:get(cnn, timeout)
-  local work_id = self._private.work_id
+  local work_q = self._private.work_q
   local h
   if timeout then
-    h = zpool.get_timeout(work_id, timeout)
+    h = work_q:get_timeout(timeout)
   else
-    h = zpool.get(work_id)
+    h = work_q:get()
   end
 
   if h == 'timeout' then return nil, 'timeout' end
@@ -114,9 +120,9 @@ local function reconnect_thread_proc(pipe, wait_on, put_to, ...)
   local odbc   = require "odbc"
   local zmq    = require "lzmq"
   local ztimer = require "lzmq.timer"
-  local zpool  = require "lzmq.pool.core"
+  local luq    = require "luq"
 
-  wait_on, put_to = wait_on - 1, put_to - 1
+  local wait_q, put_q = luq.queue(wait_on), luq.queue(put_to)
 
   local logger_ctor -- = [[return print]]
 
@@ -141,7 +147,7 @@ local function reconnect_thread_proc(pipe, wait_on, put_to, ...)
 
   local next_cnn do
     local cnn function next_cnn()
-      local h = zpool.get_timeout(wait_on, timeout)
+      local h = wait_q:get_timeout(timeout)
       if h ~= 'timeout' then
         assert(type(h) == 'userdata')
         log("I: thread select new connection: " .. tostring(h))
@@ -165,10 +171,10 @@ local function reconnect_thread_proc(pipe, wait_on, put_to, ...)
       end
       if ok then 
         log("I: connection " .. tostring(cnn:handle()) .. " pass")
-        zpool.put(put_to, hcnn)
+        put_q:put(hcnn)
       else
         log("I: connection " .. tostring(cnn:handle()) .. " fail: " .. tostring(err))
-        zpool.put(wait_on, hcnn)
+        wait_q:put(hcnn)
         if interrupted() then break end
         ztimer.sleep(timeout)
       end

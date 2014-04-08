@@ -7,7 +7,7 @@ ODBC connections pool
 
 This library allows use same ODBC connections from different threads/states.
 Also this library supports asyncronus reconnection to database in separate thread.
-This library based on [lzmq-pool](https://github.com/moteus/lzmq-pool), [lua-llthreads2](https://github.com/moteus/lua-llthreads2) and [lua-odbc](https://github.com/moteus/lua-odbc) libraryes.
+This library based on [LUQ](https://github.com/moteus/lua-luq), [lzmq](https://github.com/moteus/lzmq), [lua-llthreads2](https://github.com/moteus/lua-llthreads2) and [lua-odbc](https://github.com/moteus/lua-odbc) libraryes.
 Note. This library may does not work with original `lua-llthreads` library.
 
 
@@ -20,11 +20,9 @@ Note. This library may does not work with original `lua-llthreads` library.
 
 local odbcpool = require "odbc.dba.pool"
 
--- Client use 2 lzmq.pool slots. One for ready queue
--- and one to reconnection queue. You can get this 
--- id from config.
+local QUEUE_NAME = "MYDB"
 
-local cli = odbcpool.client(1, 2)
+local cli = odbcpool.client(QUEUE_NAME)
 
 cli:acquire(function(cnn)
   -- if this function raise error or return `false` then
@@ -42,15 +40,13 @@ end)
 -- Server thread
 --
 
--- Number of queues in lzmq.pool library
-require "lzmq.pool".init(2)
-
 local odbc     = require "odbc"
 local odbcpool = require "odbc.pool"
 
+local QUEUE_NAME = "MYDB"
 
 -- Create client to work with lzmq.pool
-local cli = odbcpool.client(1, 2)
+local cli = odbcpool.client(QUEUE_NAME)
 
 -- Create and start reconnect work thread
 -- Here we specify connection options

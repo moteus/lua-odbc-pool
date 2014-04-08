@@ -1,10 +1,11 @@
 local odbc     = require "odbc"
 local odbcpool = require "odbc.dba.pool"
-require "lzmq.pool".init(2)
 
 local IS_WINDOWS = (require"package".config:sub(1,1) == '\\')
 
 local CNN_COUNT = 1
+
+local QUEUE_NAME = "test_pool"
 
 local CNN = {
   Driver   = IS_WINDOWS and "SQLite3 ODBC Driver" or "SQLite3";
@@ -14,7 +15,7 @@ local CNN = {
 -------------------------------------------------------------------------------
 -- This is main thread that store pool and connections alive
 
-local server_cli = odbcpool.client(1, 2)
+local server_cli = odbcpool.client(QUEUE_NAME)
 local rthread = odbcpool.reconnect_thread(server_cli, CNN)
 rthread:start()
 
@@ -32,11 +33,7 @@ end
 -------------------------------------------------------------------------------
 -- This is example for any client thread
 
-local cli = odbcpool.client(1, 2)
-
-assert(1 == cli:work_queue_id())
-
-assert(2 == cli:reconnect_queue_id())
+local cli = odbcpool.client(QUEUE_NAME)
 
 local HANDLE = connections[1]:handle()
 

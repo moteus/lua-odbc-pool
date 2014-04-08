@@ -15,7 +15,7 @@ description = {
 dependencies = {
   "lua >= 5.1, < 5.3",
   "odbc",
-  "lzmq-pool",
+  "luq",
   -- "lua-llthreads2" or "lua-llthreads2-compat" or "lua-llthreads"
 }
 
