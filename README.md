@@ -7,7 +7,7 @@ ODBC connections pool
 
 This library allows use same ODBC connections from different threads/states.
 Also this library supports asyncronus reconnection to database in separate thread.
-This library based on [LUQ](https://github.com/moteus/lua-luq), [lzmq](https://github.com/moteus/lzmq), [lua-llthreads2](https://github.com/moteus/lua-llthreads2) and [lua-odbc](https://github.com/moteus/lua-odbc) libraryes.
+This library based on [LUQ](https://github.com/moteus/lua-luq), [lzmq](https://github.com/moteus/lzmq), [lua-llthreads2](https://github.com/moteus/lua-llthreads2) and [lua-odbc](https://github.com/moteus/lua-odbc) libraries.
 Note. This library may does not work with original `lua-llthreads` library.
 
 
@@ -30,7 +30,7 @@ cli:acquire(function(cnn)
 
   print(cnn:first_value("select 'Hello, '"), cnn:first_value("select 'world'"))
 
-  -- assume driver supports connected option
+  -- assume driver supports `connected` option
   return not not cnn:connected()
 end)
 ```
@@ -45,7 +45,7 @@ local odbcpool = require "odbc.pool"
 
 local QUEUE_NAME = "MYDB"
 
--- Create client to work with lzmq.pool
+-- Create client to work with odbc.pool
 local cli = odbcpool.client(QUEUE_NAME)
 
 -- Create and start reconnect work thread
@@ -64,7 +64,7 @@ for i = 1, 3 do
   cli:reconnect(cnn)
 end
 
--- Here we wait until end of application. 
+-- Here we wait until end of application.
 -- We just need keep alive `rthread`, `env` and `connections` variables
 
 -- Suppose we run this code in coroutine then we can just yield

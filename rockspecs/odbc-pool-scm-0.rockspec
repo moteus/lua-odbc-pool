@@ -16,7 +16,8 @@ dependencies = {
   "lua >= 5.1, < 5.3",
   "odbc",
   "luq",
-  -- "lua-llthreads2" or "lua-llthreads2-compat" or "lua-llthreads"
+  -- "lzmq" or "lzmq-ffi",
+  -- "lua-llthreads2" or "lua-llthreads2-compat" or "lua-llthreads",
 }
 
 build = {
