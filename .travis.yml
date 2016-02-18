@@ -1,36 +1,44 @@
-language: erlang
+language: c
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - libzmq3
+      - unixodbc
+      - libzmq3-dev
+      - unixodbc-dev
+      - libsqliteodbc
 
 env:
   global:
-    - PLATFORM=linux
-    - LUAROCKS_VER=2.1.0
-    - LUAODBC_TEST_DBMS=MySQL
-    - ZMQ_VER=zeromq4
+    - LUAROCKS=2.3.0
   matrix:
-    - LUA=lua5.1 LUA_SFX=
-    - LUA=lua5.2 LUA_SFX=
-    - LUA=luajit LUA_SFX=jit
+    - LUA=lua5.1
+    - LUA=lua5.2
+    - LUA=lua5.3
+    - LUA=luajit     # latest stable version (2.0.4)
+    # - LUA=luajit2.0  # current head of 2.0 branch
+    # - LUA=luajit2.1  # current head of 2.1 branch
 
 branches:
   only:
     - master
 
 before_install:
-  - bash .travis/setup_lua.sh
-  - bash .travis/setup_zmq.sh
-  - mysql --version
-  - sudo apt-get install libmyodbc libsqliteodbc unixodbc unixodbc-dev
+  - source .travis/setenv_lua.sh
+  - luarocks install lzmq
+  - luarocks install odbc
+  - luarocks install luq
+  - luarocks install lua-llthreads2
 
 install:
-  - sudo luarocks install https://raw2.github.com/moteus/lzmq/master/rockspecs/lzmq-scm-0.rockspec
-  - sudo luarocks install https://raw2.github.com/moteus/lua-odbc/master/rockspec/odbc-scm-0.rockspec
-  - sudo luarocks install https://raw2.github.com/moteus/lua-luq/master/rockspecs/luq-scm-0.rockspec
-  - sudo luarocks install https://raw2.github.com/moteus/lua-llthreads2/master/rockspecs/lua-llthreads2-0.1.0-1.rockspec
-  - sudo luarocks make rockspecs/odbc-pool-scm-0.rockspec
+  - luarocks make rockspecs/odbc-pool-scm-0.rockspec
 
 script:
   - cd test
-  - lua$LUA_SFX test_pool.lua
+  - lua test_pool.lua
 
 notifications:
   email:
