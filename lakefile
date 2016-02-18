@@ -8,6 +8,10 @@ if LUA_VER == '5.2' then
   LUA_NEED = 'lua52'
   LUA_DIR  = ENV.LUA_DIR_5_2 or ENV.LUA_DIR
   LUA_RUNNER  = 'lua52'
+elseif LUA_VER == '5.3' then
+  LUA_NEED = 'lua53'
+  LUA_DIR  = ENV.LUA_DIR_5_3 or ENV.LUA_DIR
+  LUA_RUNNER  = 'lua53'
 else
   LUA_NEED = 'lua51'
   LUA_DIR  = ENV.LUA_DIR
