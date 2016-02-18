@@ -1,6 +1,5 @@
 return function(odbc)
 local string   = require "string"
-local zmq      = require "lzmq"
 local luq      = require "luq"
 local zthreads = require "lzmq.threads"
 
@@ -101,7 +100,7 @@ function client:acquire(timeout, cb)
 
   local cnn, err = self:get(self._private.temp_cnn, timeout)
   if not cnn then return nil, err end
-  
+
   -- to allow recursion
   -- i do not think recursion is very useful
   self._private.temp_cnn = nil
@@ -136,7 +135,7 @@ local function reconnect_thread_proc(pipe, wait_on, put_to, ...)
 
   local log = load_logger()
 
-  local timeout, cnn = 5000, nil
+  local timeout = 5000
 
   local function interrupted()
     local msg, err = pipe:recvx(zmq.DONTWAIT)
@@ -184,25 +183,19 @@ end
 
 function reconnect_thread:new(cli, ...)
   assert(cli and (getmetatable(cli) == client))
-  local ctx = zmq.assert(zmq.context())
   local reconnect_id, work_id = cli:reconnect_queue_id(), cli:work_queue_id()
-  local thread, pipe = zthreads.fork(
-    ctx, string.dump(reconnect_thread_proc),
+  local actor, err = zthreads.xactor(
+    reconnect_thread_proc,
     reconnect_id, work_id, ...
   )
-  if not thread then
-    ctx:destroy()
-    assert(thread, pipe)
-  end
+  assert(actor, err)
 
-  pipe:set_sndtimeo(1000)
+  actor:set_sndtimeo(1000)
 
   local o = setmetatable({
     _private = {
       cli    = cli;
-      ctx    = ctx;
-      thread = thread;
-      pipe   = pipe;
+      actor  = actor;
     }
   },self)
 
@@ -210,16 +203,15 @@ function reconnect_thread:new(cli, ...)
 end
 
 function reconnect_thread:start()
-  assert(self._private.thread:start(true, true))
+  assert(self._private.actor:start(true, true))
   return self
 end
 
 function reconnect_thread:stop()
   local _private = self._private
   self._private = nil
-  _private.pipe:send("FINISH")
-  _private.ctx:destroy(5000)
-  pcall(_private.thread.join, _private.thread)
+  _private.actor:send("FINISH")
+  _private.actor:close()
   return true
 end
 
