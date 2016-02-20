@@ -76,5 +76,36 @@ coroutine.yield()
 rthread:stop()
 ```
 
+###Benchmark
+
+You can run benchmark tool form `test` dir.
+
+```
+$ lua bench_pool.lua -c 2 -t 20 -q 500 -d 10 -w 50
+```
+
+Here we allocate 2 connections and run 20 threads.
+Each thread call `acquire` method 500 times and do 
+query with avg duration 10 msec. Each acquire wait 
+at most 50 msec. Benchmark do not call actually sql
+query but do sleep to emulate it.
+
+**Result:**
+```
+Input data:
+  Connections         : 2
+  Threads             : 20
+  Total query         : 10000 (500 per thread)
+  Avg query duration  : 10[msec]
+  Max wait            : 50[msec]
+Result:
+  Elapsed time        : 43.45[sec]
+  Real query duration : 81.74[msec]
+  Fail                : 2416 (24.16%)
+```
+
+Here we see that 24% of call `acquire` fails with timeout.
+And wiait+execute of query take about 81 msec.
+
 [![Bitdeli Badge](https://d2weczhvl823v0.cloudfront.net/moteus/lua-odbc-pool/trend.png)](https://bitdeli.com/free "Bitdeli Badge")
 

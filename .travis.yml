@@ -14,6 +14,7 @@ addons:
 env:
   global:
     - LUAROCKS=2.3.0
+    - LD_PRELOAD=/lib/x86_64-linux-gnu/libpthread.so.0
   matrix:
     - LUA=lua5.1
     - LUA=lua5.2
@@ -41,6 +42,8 @@ script:
   - lua test_pool.lua
   - lua bench_pool.lua -c 1 -t 2 -q 100 -d 100 -w 100
   - lua bench_pool.lua -c 2 -t 3 -q 100 -d 100 -w 50
+  - lua bench_pool.lua -c 2 -t 10 -q 100 -d 100 -w 250
+  - lua bench_pool.lua -c 2 -t 20 -q 500 -d 10 -w 50
 
 notifications:
   email:

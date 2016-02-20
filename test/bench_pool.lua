@@ -176,6 +176,9 @@ local cli     = odbcpool.client("benchmark")
 local rthread = odbcpool.reconnect_thread(cli, CNN)
 rthread:start()
 
+-- time to connect
+ztimer.sleep(1000)
+
 local connections = {}
 for i = 1, CONNECTION_COUNT do
   local cnn = odbc.assert(env:connection())
@@ -218,6 +221,7 @@ end
 
 local msg = string.format([[
 Input data:
+  Connections         : %d
   Threads             : %d
   Total query         : %d (%d per thread)
   Avg query duration  : %d[msec]
@@ -227,6 +231,7 @@ Result:
   Real query duration : %.2f[msec]
   Fail                : %d (%.2f%%)
 ]],
+  CONNECTION_COUNT,
   THREADS_COUNT,
   total_query, QUERY_COUNT,
   AVG_QUERY_DURATION,
