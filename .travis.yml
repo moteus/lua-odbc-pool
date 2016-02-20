@@ -39,7 +39,8 @@ install:
 script:
   - cd test
   - lua test_pool.lua
-  - lua bench_pool.lua
+  - lua bench_pool.lua -c 1 -t 2 -q 100 -d 100 -w 100
+  - lua bench_pool.lua -c 2 -t 3 -q 100 -d 100 -w 50
 
 notifications:
   email:

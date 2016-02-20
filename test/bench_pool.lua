@@ -1,11 +1,127 @@
--- Configuration
-local CONNECTION_COUNT    = 1
-local THREADS_COUNT       = 2
-local QUERY_COUNT         = 100
-local WAIT_TIMEOUT        = 100 -- msec
-local AVG_QUERY_DURATION  = 200 -- msec
+#!/usr/bin/env lua
 
-----------------------------------------
+local function show_help() print([[
+Usage:
+   bench [-h] [-c VALUE] [-t VALUE] [-q VALUE] [-d VALUE] 
+        [-w VALUE]  [--sql QUERY]
+Arguments:
+  -c VALUE --connection-count VALUE
+                        Number of concurent connections
+  -t VALUE --thread-count value VALUE
+                        Number of concurent connections
+  -q VALUE --query-count value VALUE
+                        Number of query in each thread
+  -d VALUE --query-duration VALUE
+                        Avg duration of each query in msec
+  -w VALUE --wait-timeout VALUE
+                        Max timeout to wait avaliable connection
+  --s STR --connection-string STR
+                        Connection string to connect to DB.
+                        By default use SQLite3 in memory DB.
+  --sql QUERY
+                        Query to execute. By default use 
+                        only timeout to emulate query to DB
+]]) end
+
+-----------------------------------------------------------------------------------------
+-- parse command line arguments
+local args = {} do
+local arg = { ... } 
+
+local function read_key_(arg, i)
+   if arg[i]:sub(1,1) ~= '-' then return nil, nil, i end
+   if not arg[i]:sub(2,2) then return "-", nil, i+1 end
+
+   local key, value
+   if arg[i]:sub(2,2) ~= '-' then
+      key   = arg[i]:sub(2,2)
+      value = arg[i]:sub(3)
+      if #value == 0 then
+         i = i + 1
+         value = arg[i]
+      elseif value:sub(1,1) == '=' then
+         value = value:sub(2)
+      end
+      return key, value, i + 1
+   end
+
+   key = arg[i]:sub(3):match("^([^=]+)=")
+   if key then
+      value = arg[i]:sub(4 + #key)
+      return key, value, i+1
+   end
+
+   return arg[i]:sub(3), arg[i+1], i+2
+end
+
+local function read_key(arg, i)
+   local key, value, n = read_key_(arg, i)
+   if n == (i + 1) then return key, value, n end
+   assert(n == (i + 2))
+
+   if not value then return key, "true", n - 1 end
+
+   if (#value > 1) and (value:sub(1, 1) == '-') and (not value:match("^%-%d+$")) then
+      return key, "true", n - 1
+   end
+
+   return key, value, n
+end
+
+local function check_int(key, value)
+  local v = tonumber(value)
+  if not v then
+    print("Invalid value switch `" ..  key .. "': " .. value)
+    os.exit(-1)
+  end
+  return v
+end
+
+local i = 1
+while arg[i] do
+  local key, value
+  key, value, i = read_key(arg, i)
+  if key then
+    if (key == "h") or (key == "help") then
+      show_help()
+      os.exit(0)
+    elseif (key == "c") or (key == "connection-count") then
+      args.connection_count = check_int(key, value)
+    elseif (key == "t") or (key == "thread-count") then
+      args.thread_count = check_int(key, value)
+    elseif (key == "q") or (key == "query-count") then
+      args.query_count = check_int(key, value)
+    elseif (key == "d") or (key == "query-duration") then
+      args.query_duration = check_int(key, value)
+    elseif (key == "w") or (key == "wait-timeout") then
+      args.wait_timeout = check_int(key, value)
+    elseif (key == "s") or (key == "connection-string") then
+      args.connection_string = value
+    elseif (key == "sql") then
+      args.sql = value
+    else
+      print("Invalid switch: " .. key)
+      show_help()
+      os.exit(1)
+    end
+  end
+end
+
+end
+-----------------------------------------------------------------------------------------
+
+-- Configuration
+local CONNECTION_COUNT    = args.connection_count or 1
+local THREADS_COUNT       = args.thread_count     or 2
+local QUERY_COUNT         = args.query_count      or 100
+local WAIT_TIMEOUT        = args.wait_timeout     or 100 -- msec
+local AVG_QUERY_DURATION  = args.query_duration
+local SQL                 = args.sql
+local CNN
+if args.connection_string then CNN = {args.connection_string} end
+if not (SQL or AVG_QUERY_DURATION) then AVG_QUERY_DURATION = 100 end
+
+-----------------------------------------------------------------------------------------
 
 local function worker(seed, sql, timeout, qduration, n)
   local odbcpool = require "odbc.dba.pool"
@@ -39,7 +155,7 @@ local function worker(seed, sql, timeout, qduration, n)
 end
 
 local IS_WINDOWS = (require"package".config:sub(1,1) == '\\')
-local CNN = {
+CNN = CNN or {
   Driver   = IS_WINDOWS and "SQLite3 ODBC Driver" or "SQLite3";
   Database = ":memory:";
 }
@@ -107,7 +223,7 @@ Input data:
   Avg query duration  : %d[msec]
   Max wait            : %d[msec]
 Result:
-  Elapset time        : %.2f[sec]
+  Elapsed time        : %.2f[sec]
   Real query duration : %.2f[msec]
   Fail                : %d (%.2f%%)
 ]],
